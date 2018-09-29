@@ -6,7 +6,9 @@ from scipy.interpolate import CubicSpline #кубічна інтерполяці
 from scipy.optimize import minimize #знах екстремумів
 import matplotlib as mpl # модуль відображення графіків
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 from collections import deque  # імпортує клас черги collections.deque
+#import animation
 
 #збереження картинки
 
@@ -101,18 +103,22 @@ for i in range(N-1,-1,-1):
 print("Sorting...\n")
 local_min.sort()
 for i in range(local_min.size-1,0,-1):
-    if (local_min[i] < 0) or (local_min[i] > 1000):
+    if (local_min[i] < 0):
         local_min = np.delete(local_min,i)
-
+    if (local_min[i] > 1000):
+        local_min = np.delete(local_min, i)
+for i in range(local_min.size - 1, 0, -1):
     if(math.fabs(local_min[i]-local_min[i-1])<0.1):
         local_min = np.delete(local_min, i)
 
 local_max.sort()
 for i in range(local_max.size-1,0,-1):
-    if (local_max[i] < 0) or (local_max[i] > 1000):
+    if (local_max[i] < 0):
         local_max = np.delete(local_max,i)
-
-    elif(math.fabs(local_max[i]-local_max[i-1]) < 0.1):
+    if (local_max[i] > 1000):
+        local_max = np.delete(local_max, i)
+for i in range(local_max.size - 1, 0, -1):
+    if(math.fabs(local_max[i]-local_max[i-1]) < 0.1):
         local_max = np.delete(local_max, i)
 
 print ("min")
@@ -122,22 +128,113 @@ print("max")
 print(local_max)
 print("")
 
-fig = plt.figure() #"фігура, що буде відображ.
+#початкова функція лінії води
+def water_startlevel(dx):
+    y = np.zeros(dx.size);
+    for x_t in range(dx.size):
+        for i in range(local_min.size-1):
+            if ((dx[x_t] > local_min[i]) & (dx[x_t] < local_min[i+1])):
+                y[x_t]=((dx[x_t]-local_min[i])*(splines(local_min[i+1])-splines(local_min[i]))/(local_min[i+1]-local_min[i]))+splines(local_min[i])
 
-meas_dots = plt.plot(x, measuration, 'o', label='data') #вхідні точки висот
-min_dots = plt.plot(local_min, splines(local_min), 'g*', label='data') #екстремуми
-max_dots = plt.plot(local_max, splines(local_max), 'r*', label='data') #екстремуми
-spl_lines = plt.plot(dx, splines(dx)) #сплайни
+    return y
+
+delta_h = 0.01*(max(local_max)-min(local_min))
+eps = 0.05
+h = splines(local_min)
+print("h")
+print(h)
+#y = water_startlevel(dx)
+x_lr = local_min
+x_lr = np.repeat(x_lr, 2)
+
+def water_level(dx):
+    global delta_h, eps, h, x_lr
+    count = 0
+    set_end = True
+    while (set_end):  # обраховуємо висоту
+        for i in range(local_min.size):
+            V = (local_max[i+1] - local_max[i])
+            delta_V = 0
+            delta_xl = x_lr[i * 2]  # ліва точка
+            delta_xr = x_lr[(i * 2) + 1]  # права точка
+            old_h = h[i]
+            print("hi")
+            print(i)
+            while (math.fabs(V - delta_V) > eps):
+                h[i] = h[i] + delta_h
+
+                while (math.fabs(splines(delta_xl) - h[i]) > eps):  # ліва точка
+                    delta_xl = delta_xl - eps
+
+                while (math.fabs(splines(delta_xr) - h[i]) > eps):  # ліва точка
+                    delta_xr = delta_xr + eps
+
+                delta_V = 0.5 * (h[i] - old_h) * (x_lr[(i * 2) + 1] - x_lr[i * 2] + delta_xr - delta_xl)
+                count = count + 1
+                print("pook")
+                print(V)
+                print(delta_V)
+                if delta_V > V:
+                    h[i] = h[i] - delta_h
+                    delta_xl = delta_xl + eps
+                    delta_xr = delta_xr - eps
+                    delta_h = delta_h * 0.5
+                    print("пук")
+
+            x_lr[i * 2] = delta_xl          #оновлюємо х
+            x_lr[(i * 2) + 1] = delta_xr    #для висоти води
+            print("done")
+        set_end = False
+
+    #малюємо лінію
+    y = np.zeros(dx.size);
+    for x_t in range(dx.size):
+        for i in range(x_lr.size-1):
+            if ((dx[x_t] > local_min[i]) & (dx[x_t] < local_min[i+1])):
+                y[x_t]=((dx[x_t]-local_min[i])*(splines(local_min[i+1])-splines(local_min[i]))/(local_min[i+1]-local_min[i]))+splines(local_min[i])
+    print(y)
+    #return y
+
+
+while True:
+    water_level(dx)
+
+
+
+'''fig, ax = plt.subplots()
+water_line, = ax.plot(dx, water_startlevel(dx)) #рівень води
+meas_dots, = ax.plot(x, measuration, 'o', label='data') #вхідні точки висот
+min_dots, = ax.plot(local_min, splines(local_min), 'g*', label='data') #екстремуми
+max_dots, = ax.plot(local_max, splines(local_max), 'r*', label='data') #екстремуми
+spl_lines, = ax.plot(dx, splines(dx)) #сплайни'''
+
+'''def init():  # only required for blitting to give a clean slate.
+    water_line.set_data([], [])
+    return water_line,
+
+
+def animate(i):
+    water_line.set_ydata(water_level(dx))  # update the data.
+    return water_line,
+
+ani = animation.FuncAnimation(
+    fig, animate, init_func=init, interval=1, blit=True, save_count=50)
+
+#plt.show()
+#fig = plt.figure() #"фігура, що буде відображ.
+
+
 
 plt.title('Затоплення')
 plt.ylabel('Висоти')
 plt.xlabel('Крок')
 
-plt.grid(True)
+#plt.grid(True)
 
-save('pic_1_5_1', fmt='pdf')
-save('pic_1_5_1', fmt='png')
+#save('pic_1_5_1', fmt='pdf')
+#save('pic_1_5_1', fmt='png')
 
 plt.show()
 
-water_lines = plt.plot([],[],'bo')
+#water_lines = plt.plot([],[],'bo')'''
+
