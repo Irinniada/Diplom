@@ -102,22 +102,22 @@ for i in range(N-1,-1,-1):
 #відловлюємо значення екстр, які майже збігаються
 print("Sorting...\n")
 local_min.sort()
-for i in range(local_min.size-1,0,-1):
-    if (local_min[i] < 0):
+for i in range(local_min.size-1,-1,-1):
+    if (local_min[i] < 0.e+0):
         local_min = np.delete(local_min,i)
     if (local_min[i] > 1000):
         local_min = np.delete(local_min, i)
-for i in range(local_min.size - 1, 0, -1):
+for i in range(local_min.size - 1, -1, -1):
     if(math.fabs(local_min[i]-local_min[i-1])<0.1):
         local_min = np.delete(local_min, i)
 
 local_max.sort()
-for i in range(local_max.size-1,0,-1):
-    if (local_max[i] < 0):
+for i in range(local_max.size-1,-1,-1):
+    if (local_max[i] < 0.e+0):
         local_max = np.delete(local_max,i)
     if (local_max[i] > 1000):
         local_max = np.delete(local_max, i)
-for i in range(local_max.size - 1, 0, -1):
+for i in range(local_max.size - 1, -1, -1):
     if(math.fabs(local_max[i]-local_max[i-1]) < 0.1):
         local_max = np.delete(local_max, i)
 
@@ -139,7 +139,8 @@ def water_startlevel(dx):
     return y
 
 delta_h = 0.01*(max(local_max)-min(local_min))
-eps = 0.05
+eps = 0.02
+eta = 0.1
 h = splines(local_min)
 print("h")
 print(h)
@@ -148,67 +149,110 @@ x_lr = local_min
 x_lr = np.repeat(x_lr, 2)
 
 def water_level(dx):
-    global delta_h, eps, h, x_lr
+    global delta_h, eps, h, x_lr, eta
     count = 0
+    over_max_l = False
+    over_max_r = False
     set_end = True
     while (set_end):  # обраховуємо висоту
-        for i in range(local_min.size):
-            V = (local_max[i+1] - local_max[i])
+        #замінити for на while
+        i = 0
+        while(i < local_min.size):
+            V = 10*(local_max[i+1] - local_max[i])
             delta_V = 0
+            delta_h = 0.1*(max(local_max)-min(local_min))
             delta_xl = x_lr[i * 2]  # ліва точка
             delta_xr = x_lr[(i * 2) + 1]  # права точка
             old_h = h[i]
-            print("hi")
-            print(i)
+
             while (math.fabs(V - delta_V) > eps):
+
                 h[i] = h[i] + delta_h
 
                 while (math.fabs(splines(delta_xl) - h[i]) > eps):  # ліва точка
-                    delta_xl = delta_xl - eps
+                    delta_xl = delta_xl - eta
 
-                while (math.fabs(splines(delta_xr) - h[i]) > eps):  # ліва точка
-                    delta_xr = delta_xr + eps
+                    if (delta_xl < local_max[i]): #якщо перелив
+                        over_max_l = True
+                        break
+                    if (splines(delta_xl) > h[i]):
+                        delta_xl = delta_xl + 0.5 * eta
+                        break
+                        #eta = eta * 0.5
 
-                delta_V = 0.5 * (h[i] - old_h) * (x_lr[(i * 2) + 1] - x_lr[i * 2] + delta_xr - delta_xl)
+
+                eta = 0.001
+                while (math.fabs(splines(delta_xr) - h[i]) > eps):  # права точка
+                    delta_xr = delta_xr + eta
+
+                    if (delta_xr > local_max[i+1]): #якщо перелив
+                        over_max_r = True
+                        break
+                    if (splines(delta_xr) > h[i]):
+                        delta_xr = delta_xr - 0.5 * eta
+                        break
+
+                eta = 0.001
+
+                delta_V = (h[i] - old_h) * (x_lr[(i * 2) + 1] - x_lr[i * 2] + delta_xr - delta_xl)
                 count = count + 1
-                print("pook")
-                print(V)
-                print(delta_V)
+
+
                 if delta_V > V:
-                    h[i] = h[i] - delta_h
-                    delta_xl = delta_xl + eps
-                    delta_xr = delta_xr - eps
+                    h[i] = h[i] - 2*delta_h
+                    delta_xl = delta_xl + eta
+                    delta_xr = delta_xr - eta
                     delta_h = delta_h * 0.5
-                    print("пук")
+
+
+                if over_max_l: #якщо перелив зліва
+                    np.delete(local_max,i)
+                    np.delete(local_min,i)
+                    V = V - delta_V
+                    print(i)
+                    i = i - 1
+                    over_max_l = False
+                    print("over_max_l")
+                    break
+
+                if over_max_r: #якщо перелив справа
+                    np.delete(local_max,i+1)
+                    np.delete(local_min,i)
+                    V = V - delta_V
+                    #зн-ня i не змінюємо, далі лічильник автоматично перейде на наступну і
+                    over_max_r = False
+                    print("over_max_r")
+                    break
 
             x_lr[i * 2] = delta_xl          #оновлюємо х
             x_lr[(i * 2) + 1] = delta_xr    #для висоти води
             print("done")
+            i = i + 1
         set_end = False
 
     #малюємо лінію
     y = np.zeros(dx.size);
     for x_t in range(dx.size):
         for i in range(x_lr.size-1):
-            if ((dx[x_t] > local_min[i]) & (dx[x_t] < local_min[i+1])):
-                y[x_t]=((dx[x_t]-local_min[i])*(splines(local_min[i+1])-splines(local_min[i]))/(local_min[i+1]-local_min[i]))+splines(local_min[i])
+            if ((dx[x_t] > x_lr[i]) & (dx[x_t] < x_lr[i+1])):
+                y[x_t]=((dx[x_t]-x_lr[i])*(splines(x_lr[i+1])-splines(x_lr[i]))/(x_lr[i+1]-x_lr[i]))+splines(x_lr[i])
     print(y)
-    #return y
+    return y
 
 
-while True:
-    water_level(dx)
+'''while True:
+    water_level(dx)'''
 
 
 
-'''fig, ax = plt.subplots()
-water_line, = ax.plot(dx, water_startlevel(dx)) #рівень води
+fig, ax = plt.subplots()
+water_line, = ax.plot(dx, water_startlevel(dx),'b') #рівень води
 meas_dots, = ax.plot(x, measuration, 'o', label='data') #вхідні точки висот
 min_dots, = ax.plot(local_min, splines(local_min), 'g*', label='data') #екстремуми
 max_dots, = ax.plot(local_max, splines(local_max), 'r*', label='data') #екстремуми
-spl_lines, = ax.plot(dx, splines(dx)) #сплайни'''
+spl_lines, = ax.plot(dx, splines(dx)) #сплайни
 
-'''def init():  # only required for blitting to give a clean slate.
+def init():  # only required for blitting to give a clean slate.
     water_line.set_data([], [])
     return water_line,
 
@@ -218,7 +262,7 @@ def animate(i):
     return water_line,
 
 ani = animation.FuncAnimation(
-    fig, animate, init_func=init, interval=1, blit=True, save_count=50)
+    fig, animate, init_func=init, interval=50, blit=True, save_count=50)
 
 #plt.show()
 #fig = plt.figure() #"фігура, що буде відображ.
