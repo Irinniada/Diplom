@@ -1,6 +1,12 @@
 import os
+import sys
 import math
 import time
+import h5py #модуль підтримки файлів
+from PyQt5.QtWidgets import (QMainWindow, QDesktopWidget, QMessageBox, QWidget, QToolTip,
+    QPushButton, QTextEdit, QCheckBox, QFileDialog, QLineEdit, QLabel, QApplication, qApp, QAction, QVBoxLayout)
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont, QIcon #UI
 import numpy as np  # модуль масивів
 from scipy.interpolate import CubicSpline  # кубічна інтерполяція
 from scipy.optimize import minimize  # знах екстремумів
@@ -24,7 +30,151 @@ def save(name='', fmt='png'):
     os.chdir(pwd)
     # plt.close()
 
+'''
+class SecondWindow(QWidget):
+    def __init__(self, parent=None):
+        # Передаём ссылку на родительский элемент и чтобы виджет
+        # отображался как самостоятельное окно указываем тип окна
+        super().__init__(parent, Qt.Window)
+        self.build()
 
+    def build(self):
+        self.mainLayout = QVBoxLayout()
+        self.textEdit = QLineEdit(self)
+        self.textEdit.setReadOnly(True)
+        self.textEdit.setText("Всі права захищено")
+        self.textEdit.move(0, 0)
+        self.textEdit.resize(200, 300)
+        self.textEdit = QTextEdit()
+        self.setGeometry(0, 0, 200, 300)
+        self.setWindowTitle('Довідка')
+        self.setLayout(self.mainLayout)
+
+class MainWindow(QWidget):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.secondWin = None
+        self.initUI()
+
+
+    def initUI(self):
+        # вспливаючі підказки
+        QToolTip.setFont(QFont('SansSerif', 10))
+
+        #іконка
+        self.setWindowTitle('Icon')
+        self.setWindowIcon(QIcon('pattern.png'))
+
+        btn = QPushButton('Старт', self)
+        btn.setToolTip('Почати виконання програми')
+        btn.resize(btn.sizeHint())
+        btn.move(50, 500)
+        btn.clicked.connect()
+
+        btn_help = QPushButton('Довідка', self)
+        btn_help.setToolTip('Інформація про програму')
+        btn_help.resize(btn.sizeHint())
+        btn_help.move(210, 500)
+        btn_help.clicked.connect(self.openWin)
+
+        btn_help = QPushButton('Вихід', self)
+        btn_help.setToolTip('Вийти на робочий стіл')
+        btn_help.resize(btn.sizeHint())
+        btn_help.move(370, 500)
+
+        hi_label = QLabel("Вітаємо! Введіть ваші заміри у поле знизу, або прикріпіть файл:", self)
+        hi_label.move(50, 20)
+
+        cb = QCheckBox('Зберегти анімацію', self)
+        cb.move(50, 450)
+        cb.toggle()
+        cb.stateChanged.connect(self.changeTitle)
+
+        btn_file = QPushButton('Файл...', self)
+        btn_file.move(50, 50)
+        btn_file.setToolTip('Прикріпляйте файл розширення <b>.txt</b>')
+        btn_file.clicked.connect(self.showDialog)
+
+        exitAction = QAction(QIcon('exit.png'), '&Вихід', self)
+        exitAction.setShortcut('Ctrl+Q')
+        exitAction.setStatusTip('Exit application')
+        exitAction.triggered.connect(qApp.quit)
+
+        startAction = QAction('&Старт', self)
+        exitAction.setShortcut('Ctrl+Q')
+        exitAction.setStatusTip('Exit application')
+        exitAction.triggered.connect(qApp.quit)
+
+
+
+        menubar = self.menuBar()
+        fileMenu = menubar.addMenu('&Файл')
+        fileMenu.addAction(exitAction)
+        startMenu = menubar.addMenu('&Старт')
+        aboutMenu = menubar.addMenu('&Довідка')
+        exitMenu = menubar.addMenu('&Вихід')
+
+        self.textEdit = QLineEdit(self)
+        self.textEdit.move(50, 100)
+        self.textEdit.resize(400,300)
+        self.textEdit.setToolTip('Числа записуються через кому (,), знаки після коми відокремлюються крапкою (.). Приклад: 2.0, 3.7')
+        self.textEdit = QTextEdit()
+        #self.setCentralWidget(self.textEdit)
+
+
+        self.setGeometry(100, 100, 500, 600)
+        self.setWindowTitle('Моделювання затоплення поверхні')
+
+
+
+        self.show()
+
+    def openWin(self):
+        if not self.secondWin:
+             self.secondWin = SecondWindow(self)
+        self.secondWin.show()
+
+        # закриття програми
+    def closeEvent(self, event):
+        reply = QMessageBox.question(self, 'Вихід', "Ви дійсно бажаєте вийти?", QMessageBox.Yes | QMessageBox.No,  QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            event.accept()
+        else:
+             event.ignore()
+
+    #центрування вікна
+    def center(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+
+    #збереження анімації
+    #TODO збереження анымації по стану чекбокса
+    def changeTitle(self, state):
+        if state == Qt.Checked:
+            self.setWindowTitle('QCheckBox')
+        else:
+            self.setWindowTitle('QCheckBox')
+
+    def showDialog(self):
+        fname = QFileDialog.getOpenFileName(self, 'Open file', '/home')[0]
+        f = open(fname, 'r')
+
+        with f:
+            data = f.read()
+            self.textEdit.setText(data)
+
+
+#відображ. UI
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    ex = MainWindow()
+    sys.exit(app.exec_())
+
+    sys.exit(app.exec_())
+'''
 # задаємо вхідні дані
 
 N = 10  #
@@ -133,30 +283,26 @@ print("")
 print("max")
 print(local_max)
 print("")
+time.sleep(3)
 
 
 # початкова функція лінії води
-def water_startlevel(dx):
-    y = np.zeros(dx.size)
-    for x_t in range(dx.size):
-        for i in range(local_min.size - 1):
-            if ((dx[x_t] > local_min[i]) & (dx[x_t] < local_min[i + 1])):
-                y[x_t] = ((dx[x_t] - local_min[i]) * (splines(local_min[i + 1]) - splines(local_min[i])) / (
-                            local_min[i + 1] - local_min[i])) + splines(local_min[i])
 
-    return y
 
 
 delta_h = 0.01 * (max(local_max) - min(local_min))
-eps = 0.01
+eps = 0.005
 eta = 0.01
 h = splines(local_min)
 print("h")
 print(h)
 # y = water_startlevel(dx)
-x_lr = local_min
-x_lr = np.repeat(x_lr, 2)
+x_lr = np.array(np.repeat(local_min, 2))
+#x_lr = np.repeat(x_lr, 2)
 V = np.zeros(local_min.size)
+
+print("x_lr")
+print(x_lr)
 print("V")
 print(V)
 for i in range(V.size):
@@ -164,10 +310,15 @@ for i in range(V.size):
 print("V")
 print(V)
 
+def water_startlevel(x_lr):
+    y = np.zeros(x_lr.size)
+    for i in range(x_lr.size):
+        y[i] = splines(x_lr[i])
+
+    return y
+
 def water_level(step):
-    global delta_h, eps, h, x_lr, eta
-    print("x_lr")
-    print(x_lr)
+    global delta_h, eps, h, x_lr, eta, set_filled, local_min, local_max
     count = 0
     over_max_l = False
     over_max_r = False
@@ -175,143 +326,177 @@ def water_level(step):
     while (set_end):  # обраховуємо висоту
         # замінити for на while
         i = 0
+        print('set_filled[i]')
+        print(set_filled)
         while (i < local_min.size):
+
             if (set_filled[i]):  # область вже заповнена
                 i = i + 1
-                break
-            #V = 10 * (local_max[i + 1] - local_max[i])
-            delta_V = 0
-            delta_h = 0.001  # 0.1*(max(local_max)-min(local_min))
-            delta_xl = x_lr[i * 2]  # ліва точка
-            print("delta_xl")
-            print(delta_xl)
-            delta_xr = x_lr[(i * 2) + 1]  # права точка
-            print("delta_xr")
-            print(delta_xr)
-            old_h = h[i]
 
-            while (math.fabs(V[i] - delta_V) > eps):
+            else:
+                #V = 10 * (local_max[i + 1] - local_max[i])
+                delta_V = 0
+                delta_h = 0.001  # 0.1*(max(local_max)-min(local_min))
+                delta_xl = x_lr[i * 2]  # ліва точка
+                print("delta_xl")
+                print(delta_xl)
+                delta_xr = x_lr[(i * 2) + 1]  # права точка
+                print("delta_xr")
+                print(delta_xr)
+                old_h = h[i]
 
-                h[i] = h[i] + delta_h
+                while (math.fabs(V[i] - delta_V) > eps):
 
-                while (math.fabs(splines(delta_xl) - h[i]) > eps):  # ліва точка
-                    delta_xl = delta_xl - eta
+                    h[i] = h[i] + delta_h
 
-                    if (delta_xl < local_max[i]):  # якщо перелив
-                        over_max_l = True
-                        break
-                    if (splines(delta_xl) > h[i]):
-                        delta_xl = delta_xl + eta
-                        eta = eta * 0.5
-
-                while (math.fabs(splines(delta_xr) - h[i]) > eps):  # права точка
-                    delta_xr = delta_xr + eta
-
-                    if (delta_xr > local_max[i + 1]):  # якщо перелив
-                        over_max_r = True
-                        break
-                    if (splines(delta_xr) > h[i]):
+                    while (math.fabs(splines(delta_xl) - h[i]) > eps):  # ліва точка
                         delta_xl = delta_xl - eta
-                        eta = eta * 0.5
 
-                delta_V = 0.005*(h[i] - old_h) * (x_lr[(i * 2) + 1] - x_lr[i * 2] + delta_xr - delta_xl)
-                count = count + 1
+                        if (delta_xl < local_max[i]):  # якщо перелив
+                            over_max_l = True
+                            break
+                        if (splines(delta_xl) > h[i]):
+                            delta_xl = delta_xl + eta
+                            eta = eta * 0.5
 
-                if delta_V > V[i]:
-                    h[i] = h[i] - 2 * delta_h
-                    delta_xl = delta_xl + eta
-                    delta_xr = delta_xr - eta
-                    delta_h = delta_h * 0.5
+                    while (math.fabs(splines(delta_xr) - h[i]) > eps):  # права точка
+                        delta_xr = delta_xr + eta
 
-                # TODO замінити реалізацію заповнення: показник заповнення set_filled, для адекватного малювання
+                        if (delta_xr > local_max[i + 1]):  # якщо перелив
+                            over_max_r = True
+                            break
+                        if (splines(delta_xr) > h[i]):
+                            delta_xl = delta_xl - eta
+                            eta = eta * 0.5
 
-                if over_max_l:  # якщо перелив зліва
-                    #input('Press <l> to continue')
-                    set_filled[i] = True
-                    over_max_l = False
+                    delta_V = 0.005*(h[i] - old_h) * (x_lr[(i * 2) + 1] - x_lr[i * 2] + delta_xr - delta_xl)
+                    count = count + 1
 
-                    if (i == 0):  # якщо перелив за ліву точку, яка є краєм
-                        continue
+                    if delta_V > V[i]:
+                        h[i] = h[i] - 2 * delta_h
+                        delta_xl = delta_xl + eta
+                        delta_xr = delta_xr - eta
+                        delta_h = delta_h * 0.5
 
-                    elif (not set_filled[i - 1]):  # лівий край нижчий за наступну т лок макс
-                        V[i - 1] = V[i - 1] + V[i]
+                    # TODO замінити реалізацію заповнення: показник заповнення set_filled, для адекватного малювання
 
-                    elif (set_filled[i - 1]):
-                        np.delete(local_max, i)
-                        np.delete(local_min, i)
-                        np.delete(x_lr, 2 * i)
-                        np.delete(x_lr, 2 * i - 1)
-                        np.delete(set_filled,i)
-                        set_filled[i - 1] = False
-                        i = i - 1
+                    if over_max_l:  # якщо перелив зліва
+                        #input('Press <l> to continue')
+                        set_filled[i] = True
+                        over_max_l = False
+
+                        if (i == 0):  # якщо перелив за ліву точку, яка є краєм
+                            continue
+
+                        elif (not set_filled[i - 1]):  # лівий край нижчий за наступну т лок макс
+                            V[i - 1] = V[i - 1] + V[i]
+                            V[i] = 0
+
+                        elif (set_filled[i - 1]):
+                            local_max = np.delete(local_max, i)
+                            local_min = np.delete(local_min, i - 1)
+                            print("St x_lr!")
+                            print(x_lr)
+                            print("Deleting:")
+                            x_lr = np.delete(x_lr, 2 * i)
+                            x_lr = np.delete(x_lr, 2 * i - 1)
+                            print("Delete x_lr!")
+                            print(x_lr)
+                            set_filled = np.delete(set_filled,i - 1)
+                            set_filled[i - 1] = False
+                            i = i - 1
+                            print("")
+                            print("local_min")
+                            print(local_min)
+                            print("local_max")
+                            print(local_max)
+                            print("set_filled")
+                            print(set_filled)
+                            time.sleep(5)
 
 
-                    break
-
-                if over_max_r:  # якщо перелив справа
-                    set_filled[i] = True
-                    over_max_r = False
-                    print("i")
-                    print(i)
-                    print("local_max.size - 2")
-                    print(local_max.size - 2)
-                    if (i == (local_max.size - 2)):  # якщо перелив за праву точку, яка є краєм
-                        print("i")
-                        print(i)
                         break
 
-                    elif (not set_filled[i + 1]):  # справа не залито
-                        print("set_filled[i + 1]")
-                        print(set_filled[i + 1])
-                        print("set_filled")
-                        print(set_filled)
-                        V[i + 1] = V[i + 1] + V[i]
-
-                    elif (set_filled[i + 1]):
+                    if over_max_r:  # якщо перелив справа
+                        set_filled[i] = True
+                        over_max_r = False
                         print("i")
                         print(i)
-                        np.delete(local_max, i)
-                        np.delete(local_min, i)
-                        np.delete(x_lr, 2 * i + 2)
-                        np.delete(x_lr, 2 * i + 1)
-                        np.delete(set_filled,i)
-                        set_filled[i] = False #це було set_filled[i + 1]
-                        print("set_filled")
-                        print(set_filled)
+                        print("local_max.size - 2")
+                        print(local_max.size - 2)
+                        if (i == (local_max.size - 2)):  # якщо перелив за праву точку, яка є краєм
+                            print("i")
+                            print(i)
+                            break
 
-                    break
+                        elif (not set_filled[i + 1]):  # справа не залито
+                            print("set_filled[i + 1]")
+                            print(set_filled[i + 1])
+                            print("set_filled")
+                            print(set_filled)
+                            V[i + 1] = V[i + 1] + V[i]
 
-            x_lr[i * 2] = delta_xl  # оновлюємо х
-            x_lr[(i * 2) + 1] = delta_xr  # для висоти води
-            print("done! x_lr:")
-            print(x_lr)
+                        elif (set_filled[i + 1]):
+                            print("i")
+                            print(i)
+                            local_max = np.delete(local_max, i + 1)
+                            local_min = np.delete(local_min, i + 1)
+                            x_lr = np.delete(x_lr, 2 * i + 2)
+                            x_lr = np.delete(x_lr, 2 * i + 1)
+                            print("Delete x_lr!")
+                            print(x_lr)
+                            set_filled = np.delete(set_filled, i + 1)
+                            set_filled[i] = False #це було set_filled[i + 1]
+                            print("set_filled")
+                            print(set_filled)
+                            print("")
+                            print("local_min")
+                            print(local_min)
+                            print("local_max")
+                            print(local_max)
+                            print("set_filled")
+                            print(set_filled)
+                            time.sleep(5)
+                            #як варіант - взяти за дно точку максимуму між ними
 
-            print(splines(x_lr))
-            i = i + 1
+                        break
+
+                x_lr[i * 2] = delta_xl  # оновлюємо х
+                x_lr[(i * 2) + 1] = delta_xr  # для висоти води
+                print("done! x_lr:")
+                print(x_lr)
+
+                print(splines(x_lr))
+                i = i + 1
         set_end = False
-        time.sleep(0.1)
+        time.sleep(1)
 
     # FIXME знайти адекватний спосіб малюваьи лінію
     # малюємо лінію
-    y = np.zeros(dx.size)
+
+    y = np.zeros(x_lr.size)
     print("y before")
     print(y)
-    for x_t in range(dx.size):
+    '''for x_t in range(dx_resized.size):
         for i in range(x_lr.size - 1):
-            if ((dx[x_t] >= x_lr[i]) and (dx[x_t] <= x_lr[i + 1])):
-                y[x_t] = ((dx[x_t] - x_lr[i]) * (splines(x_lr[i + 1]) - splines(x_lr[i])) / (
-                            x_lr[i + 1] - x_lr[i])) + splines(x_lr[i])
+            if ((dx_resized[x_t] >= x_lr[i]) and (dx_resized[x_t] <= x_lr[i + 1])):
+                y[x_t] = ((dx_resized[x_t] - x_lr[i]) * (splines(x_lr[i + 1]) - splines(x_lr[i])) / (
+                            x_lr[i + 1] - x_lr[i])) + splines(x_lr[i])'''
+    for i in range(x_lr.size):
+        y[i] = splines(x_lr[i])
+    print("x_lr")
+    print(x_lr)
 
     print("y")
     print(y)
-    return y
+    return x_lr, y
 
 
 '''while True:
     water_level(dx)'''
 
 fig, ax = plt.subplots()
-water_line, = ax.plot(dx, water_startlevel(dx), 'b')  # рівень води
+water_line, = ax.plot(x_lr, water_startlevel(x_lr), 'b')  # рівень води
 meas_dots, = ax.plot(x, measuration, 'o', label='data')  # вхідні точки висот
 min_dots, = ax.plot(local_min, splines(local_min), 'g*', label='data')  # екстремуми
 max_dots, = ax.plot(local_max, splines(local_max), 'r*', label='data')  # екстремуми
@@ -324,7 +509,7 @@ def init():  # only required for blitting to give a clean slate.
 
 
 def animate(i):
-    water_line.set_data(dx, water_level(i))  # update the data.
+    water_line.set_data(water_level(i))  # update the data.
     return water_line,
 
 
