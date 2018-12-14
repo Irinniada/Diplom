@@ -3,8 +3,9 @@ import sys
 import math
 import time
 import h5py #модуль підтримки файлів
-from PyQt5.QtWidgets import (QMainWindow, QDesktopWidget, QMessageBox, QWidget, QToolTip,
-    QPushButton, QTextEdit, QCheckBox, QFileDialog, QLineEdit, QLabel, QApplication, qApp, QAction, QVBoxLayout)
+#from PyQt5.QtWidgets import (QMainWindow, QDesktopWidget, QMessageBox, QWidget, QToolTip,
+#    QPushButton, QTextEdit, QCheckBox, QFileDialog, QLineEdit, QLabel, QApplication, qApp, QAction, QVBoxLayout)
+from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QIcon #UI
 import numpy as np  # модуль масивів
@@ -14,8 +15,10 @@ import matplotlib as mpl  # модуль відображення графікі
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from collections import deque  # імпортує клас черги collections.deque
-from Modeling import modeling
 
+import design
+
+'''
 class SecondWindow(QWidget):
     def __init__(self, parent=None):
         # Передаём ссылку на родительский элемент и чтобы виджет
@@ -55,7 +58,7 @@ class MainWindow(QWidget):
         btn.setToolTip('Почати виконання програми')
         btn.resize(btn.sizeHint())
         btn.move(50, 500)
-        btn.clicked.connect(modeling())
+        #btn.clicked.connect(modeling())
 
         btn_help = QPushButton('Довідка', self)
         btn_help.setToolTip('Інформація про програму')
@@ -91,15 +94,7 @@ class MainWindow(QWidget):
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(qApp.quit)
 
-
-
-        menubar = self.menuBar()
-        fileMenu = menubar.addMenu('&Файл')
-        fileMenu.addAction(exitAction)
-        startMenu = menubar.addMenu('&Старт')
-        aboutMenu = menubar.addMenu('&Довідка')
-        exitMenu = menubar.addMenu('&Вихід')
-
+       
         self.textEdit = QLineEdit(self)
         self.textEdit.move(50, 100)
         self.textEdit.resize(400,300)
@@ -159,6 +154,20 @@ def main():
 #відображ. UI
 main()
 
+'''
 
+class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
+    def __init__(self):
+        # для доступа до змінних, методів
+        # в файле design.py
+        super().__init__()
+        self.setupUi(self)  # ініціалізація дизайна
 
+def main():
+    app = QtWidgets.QApplication(sys.argv)  # новий екземпляр QApplication
+    window = ExampleApp()  # ств об'єкт класу ExampleApp
+    window.show()  # показуєм вікно
+    app.exec_()  # запускаєм додаток
 
+if __name__ == '__main__':  # якщо запускаэм файл напряму, а не імпортуємо
+    main()  # то запускаєм ф-ю main()

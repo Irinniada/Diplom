@@ -249,7 +249,7 @@ def water_level(step):
                             delta_xl = delta_xl - eta
                             eta = eta * 0.5
 
-                    delta_V = 0.005 * (h[i] - old_h) * (x_lr[(i * 2) + 1] - x_lr[i * 2] + delta_xr - delta_xl)
+                    delta_V = 0.01 * (h[i] - old_h) * (x_lr[(i * 2) + 1] - x_lr[i * 2] + delta_xr - delta_xl)
                     count = count + 1
 
                     if delta_V > V[i]:
@@ -272,7 +272,7 @@ def water_level(step):
                             V[i - 1] = V[i - 1] + V[i]
                             V[i] = 0
 
-                        elif (set_filled[i - 1]):
+                        elif (set_filled[i - 1]): # те саме, але  i - 1 заповнена
                             local_max = np.delete(local_max, i)
                             local_min = np.delete(local_min, i - 1)
                             print("St x_lr!")
@@ -315,7 +315,7 @@ def water_level(step):
                             print(set_filled)
                             V[i + 1] = V[i + 1] + V[i]
 
-                        elif (set_filled[i + 1]):
+                        elif (set_filled[i + 1]): # те саме, але  i + 1 заповнена
                             print("i")
                             print(i)
                             local_max = np.delete(local_max, i + 1)
@@ -350,17 +350,11 @@ def water_level(step):
         set_end = False
         time.sleep(1)
 
-    # FIXME знайти адекватний спосіб малюваьи лінію
-    # малюємо лінію
 
+    # малюємо лінію
     y = np.zeros(x_lr.size)
     print("y before")
     print(y)
-    '''for x_t in range(dx_resized.size):
-        for i in range(x_lr.size - 1):
-            if ((dx_resized[x_t] >= x_lr[i]) and (dx_resized[x_t] <= x_lr[i + 1])):
-                y[x_t] = ((dx_resized[x_t] - x_lr[i]) * (splines(x_lr[i + 1]) - splines(x_lr[i])) / (
-                            x_lr[i + 1] - x_lr[i])) + splines(x_lr[i])'''
     for i in range(x_lr.size):
         y[i] = splines(x_lr[i])
     print("x_lr")
