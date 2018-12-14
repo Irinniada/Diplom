@@ -1,12 +1,12 @@
 import os
 import sys
-import math
+'''import math
 import time
-import h5py #модуль підтримки файлів
+import h5py #модуль підтримки файлів'''
 #from PyQt5.QtWidgets import (QMainWindow, QDesktopWidget, QMessageBox, QWidget, QToolTip,
 #    QPushButton, QTextEdit, QCheckBox, QFileDialog, QLineEdit, QLabel, QApplication, qApp, QAction, QVBoxLayout)
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
+'''from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QIcon #UI
 import numpy as np  # модуль масивів
 from scipy.interpolate import CubicSpline  # кубічна інтерполяція
@@ -14,7 +14,7 @@ from scipy.optimize import minimize  # знах екстремумів
 import matplotlib as mpl  # модуль відображення графіків
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from collections import deque  # імпортує клас черги collections.deque
+from collections import deque  # імпортує клас черги collections.deque'''
 
 import design
 
