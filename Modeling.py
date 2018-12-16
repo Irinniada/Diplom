@@ -25,7 +25,6 @@ def save(name='', fmt='png'):
     os.chdir(pwd)
     # plt.close()
 
-
 N = 10  #
 measuration = np.random.rand(N)  # масив вхідних даних (висот) (зараз - рандом, взагалі задається "=np.array..."
 measuration *= 20
@@ -57,7 +56,7 @@ def reverse_spl(x_abs):
     temp = splines(x_abs)
     return (-1) * temp[0]
 
-def modeling():
+def modeling(set_intense):
     global local_min, local_max, set_filled, delta_h,x_lr,h,V,eps,eta
     for i in range(N - 1, -1, -1):
         print(i)
@@ -149,7 +148,7 @@ def modeling():
     # початкова функція лінії води
     print(V.size)
     for i in range(V.size):
-        V[i] = 0.005 * (local_max[i + 1] - local_max[i])
+        V[i] = set_intense * 0.005 * (local_max[i + 1] - local_max[i])
     print("V")
     print(V)
 
@@ -183,7 +182,7 @@ def modeling():
 
     # plt.grid(True)
 
-    # save('pic_1_5_1', fmt='pdf')
+    # save('pic_1_5_1'ax, fmt='pdf')
     # save('pic_1_5_1', fmt='png')
 
     plt.show()
@@ -344,6 +343,21 @@ def water_level(step):
                 x_lr[(i * 2) + 1] = delta_xr  # для висоти води
                 print("done! x_lr:")
                 print(x_lr)
+
+                #площа контакту води та грунту
+                x_count = 0
+                for temp in range(dx.size):
+                    if (dx[temp] > delta_xl):
+                        x_count = temp
+                        break
+                # від лівого краю до дх
+                l_contact = math.sqrt(math.pow(dx[x_count]-delta_xl,2)+math.pow(splines(dx[x_count])-splines(delta_xl),2))
+                while (dx[x_count] < delta_xr):
+                    x_count = x_count + 1
+                    l_contact = (l_contact + math.sqrt(math.pow(dx[x_count]-math.pow(dx[x_count-1]), 2) +
+                        math.pow(splines(dx[x_count])-splines(dx[x_count-1]), 2)))
+
+
 
                 print(splines(x_lr))
                 i = i + 1

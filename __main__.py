@@ -17,6 +17,7 @@ import matplotlib.animation as animation
 from collections import deque  # імпортує клас черги collections.deque'''
 
 import design
+from Modeling import modeling
 
 '''
 class SecondWindow(QWidget):
@@ -163,11 +164,17 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
         super().__init__()
         self.setupUi(self)  # ініціалізація дизайна
 
+
 def main():
     app = QtWidgets.QApplication(sys.argv)  # новий екземпляр QApplication
     window = ExampleApp()  # ств об'єкт класу ExampleApp
+    window.pushButton_2.clicked.connect(lambda: start_button_clicked(window))
     window.show()  # показуєм вікно
     app.exec_()  # запускаєм додаток
+
+def start_button_clicked(window):
+    set_intense = float(window.lineEdit.text())
+    modeling(set_intense)
 
 if __name__ == '__main__':  # якщо запускаэм файл напряму, а не імпортуємо
     main()  # то запускаєм ф-ю main()
