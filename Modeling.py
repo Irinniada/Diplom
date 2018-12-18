@@ -10,7 +10,7 @@ import matplotlib as mpl  # модуль відображення графікі
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from collections import deque  # імпортує клас черги collections.deque
-
+import Filtration1
 # import animation
 
 # збереження картинки
@@ -47,6 +47,9 @@ eta = 0.01
 h = splines(local_min)
 x_lr = np.array(np.repeat(local_min, 2))
 V = np.zeros(local_min.size)
+y_under_surface = min(local_min) - 10*delta_h
+
+k_filter = 1
 
 def spl(x_abs):
     temp = splines(x_abs)
@@ -224,6 +227,37 @@ def water_level(step):
                 print(delta_xr)
                 old_h = h[i]
 
+                # площа контакту води та грунту
+                #впливає на об'єм затоплення (Об.зат = Об.опадів-Об.фільтр-Об.випар., Об.фільтр~пл конт.
+                x_count = 0
+                for temp in range(dx.size):
+                    if (dx[temp] > delta_xl):
+                        x_count = temp
+                        break
+                # від лівого краю до дх
+                l_contact = math.sqrt(
+                    math.pow(dx[x_count] - delta_xl, 2) + math.pow(splines(dx[x_count]) - splines(delta_xl), 2))
+                x_step = x_count
+                while (dx[x_step] < delta_xr):
+                    x_step = x_step + 1
+                    l_contact = (l_contact + math.sqrt(math.pow(dx[x_step] - dx[x_step - 1],2) + math.pow(splines(dx[x_step] - splines(dx[x_step - 1])),2)))
+
+                # задача фільтр
+                # H - напори
+                x_step = x_count
+                v_sum_filter = 0
+                if (math.fabs(splines(delta_xl) - splines(local_min[i])) > 0): #якщо є заповнення
+                    while (dx[x_step] < delta_xr):
+                        x_step = x_step + 1
+                        H = Filtration1.RS(math.fabs(splines(dx[x_step]) - y_under_surface),math.fabs((splines(delta_xl)-splines(local_min[i]))))
+                        v_filter = k_filter * math.fabs((H[0]-H[-1])/(splines(dx[x_step]) - y_under_surface))
+                        v_sum_filter = v_sum_filter + v_filter
+                        x_step = x_step + 1
+
+                #знаходиомо об'єм фільтрований
+                V_filter = (l_contact * v_sum_filter)
+
+
                 while (math.fabs(V[i] - delta_V) > eps):
 
                     h[i] = h[i] + delta_h
@@ -248,7 +282,7 @@ def water_level(step):
                             delta_xl = delta_xl - eta
                             eta = eta * 0.5
 
-                    delta_V = 0.01 * (h[i] - old_h) * (x_lr[(i * 2) + 1] - x_lr[i * 2] + delta_xr - delta_xl)
+                    delta_V = (0.01 * (h[i] - old_h) * (x_lr[(i * 2) + 1] - x_lr[i * 2] + delta_xr - delta_xl)) - V_filter
                     count = count + 1
 
                     if delta_V > V[i]:
@@ -343,21 +377,6 @@ def water_level(step):
                 x_lr[(i * 2) + 1] = delta_xr  # для висоти води
                 print("done! x_lr:")
                 print(x_lr)
-
-                #площа контакту води та грунту
-                x_count = 0
-                for temp in range(dx.size):
-                    if (dx[temp] > delta_xl):
-                        x_count = temp
-                        break
-                # від лівого краю до дх
-                l_contact = math.sqrt(math.pow(dx[x_count]-delta_xl,2)+math.pow(splines(dx[x_count])-splines(delta_xl),2))
-                while (dx[x_count] < delta_xr):
-                    x_count = x_count + 1
-                    l_contact = (l_contact + math.sqrt(math.pow(dx[x_count]-math.pow(dx[x_count-1]), 2) +
-                        math.pow(splines(dx[x_count])-splines(dx[x_count-1]), 2)))
-
-
 
                 print(splines(x_lr))
                 i = i + 1
