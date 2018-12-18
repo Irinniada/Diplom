@@ -255,7 +255,7 @@ def water_level(step):
                         x_step = x_step + 1
 
                 #знаходиомо об'єм фільтрований
-                V_filter = (l_contact * v_sum_filter)
+                V_filter = (l_contact * v_sum_filter)*0.001
 
 
                 while (math.fabs(V[i] - delta_V) > eps):
@@ -282,8 +282,12 @@ def water_level(step):
                             delta_xl = delta_xl - eta
                             eta = eta * 0.5
 
-                    delta_V = (0.01 * (h[i] - old_h) * (x_lr[(i * 2) + 1] - x_lr[i * 2] + delta_xr - delta_xl)) - V_filter
+                    delta_V = 0.01 * ((h[i] - old_h) * (x_lr[(i * 2) + 1] - x_lr[i * 2] + delta_xr - delta_xl) - V_filter)
                     count = count + 1
+                    print('delta_V')
+                    print(delta_V)
+                    print('V_filter')
+                    print(V_filter)
 
                     if delta_V > V[i]:
                         h[i] = h[i] - 2 * delta_h
