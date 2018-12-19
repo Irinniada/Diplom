@@ -1,19 +1,15 @@
 import os
-import sys
 import math
 import time
-import h5py #модуль підтримки файлів
+import json
+from random import random
 import numpy as np  # модуль масивів
 from scipy.interpolate import CubicSpline  # кубічна інтерполяція
 from scipy.optimize import minimize  # знах екстремумів
-import matplotlib as mpl  # модуль відображення графіків
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from collections import deque  # імпортує клас черги collections.deque
 import Filtration1
-# import animation
 
-# збереження картинки
 
 def save(name='', fmt='png'):
     pwd = os.getcwd()
@@ -25,135 +21,75 @@ def save(name='', fmt='png'):
     os.chdir(pwd)
     # plt.close()
 
-N = 10  #
-measuration = np.random.rand(N)  # масив вхідних даних (висот) (зараз - рандом, взагалі задається "=np.array..."
-measuration *= 20
-measuration -= 10  # це все до випадкової генерації
-print(measuration)
 
-x = np.arange(0, N, 1)  # масив по осі Х
+def modeling(set_intense, k):
+    global local_min, local_max, set_filled, delta_h, x_lr, h, V, eps, eta
 
-splines = CubicSpline(x, measuration)  # шматки сплайнів
-
-dx = np.arange(0, N - 1, 0.1)  # розбиваємо х для відображ. графіку/сплайнів
-
-# знах екстремуми, поки що для сплайнів
-local_min = np.zeros(N)
-local_max = np.zeros(N)
-
-delta_h = 0.01 * (max(local_max) - min(local_min))
-eps = 0.005
-eta = 0.01
-h = splines(local_min)
-x_lr = np.array(np.repeat(local_min, 2))
-V = np.zeros(local_min.size)
-y_under_surface = min(local_min) - 10*delta_h
-
-k_filter = 1
-
-def spl(x_abs):
-    temp = splines(x_abs)
-    return temp[0]
-
-def reverse_spl(x_abs):
-    temp = splines(x_abs)
-    return (-1) * temp[0]
-
-def modeling(set_intense):
-    global local_min, local_max, set_filled, delta_h,x_lr,h,V,eps,eta
     for i in range(N - 1, -1, -1):
-        print(i)
-
         current_spl = splines(dx[i * 10:])
 
-        if (i == 0):
-            if (current_spl[0] < current_spl[1]):  # якщо лівий край нижче - не враховуємо
-                print(local_min)
-                print(local_max)
+        if not i:
+            if current_spl[0] < current_spl[1]:  # якщо лівий край нижче - не враховуємо
                 local_min = np.delete(local_min, i)
                 local_max = np.delete(local_max, i)
-                print("left delete!")
-                print(local_min)
-                print(local_max)
 
-            elif (current_spl[0] > current_spl[1]):  # якщо лівий край вижче - врах як максимум
-                print(local_min)
-                print(local_max)
+            elif current_spl[0] > current_spl[1]:  # якщо лівий край вижче - врах як максимум
                 local_max[i] = x[0]
                 local_min = np.delete(local_min, i)
-                print("left max!")
-                print(local_min)
-                print(local_max)
 
-        if (i == N - 1):
+        if i == N - 1:
             current_spl = splines(dx[(i - 1) * 10:])
 
-            if (current_spl[N - 1] < current_spl[N - 2]):  # якщо правий край нижче - не враховуємо
+            if current_spl[N - 1] < current_spl[N - 2]:  # якщо правий край нижче - не враховуємо
                 local_min = np.delete(local_min, i)
                 local_max = np.delete(local_max, i)
-                print("right delete!")
 
-            elif (current_spl[N - 1] > current_spl[N - 2]):  # якщо правий край вижче - врах як максимум
+            elif current_spl[N - 1] > current_spl[N - 2]:  # якщо правий край вижче - врах як максимум
                 local_max[i] = x[N - 1]
                 local_min = np.delete(local_min, i)
-                print("right max!")
 
-        if ((i > 0) & (i < N - 1)):
-            temp_min = minimize(spl, dx[i * 10:], method='nelder-mead')
+        if (i > 0) and (i < N - 1):
+            temp_min = minimize(lambda spl: splines(spl)[0], dx[i * 10:], method='nelder-mead')
             local_min[i] = temp_min.x[0]
-            print("min")
-            print(local_min)
-            print("")
-            temp_max = minimize(reverse_spl, dx[i * 10:], method='nelder-mead')
+            temp_max = minimize(lambda rspl: (-1) * splines(rspl)[0], dx[i * 10:], method='nelder-mead')
             local_max[i] = temp_max.x[0]
-            print("max")
-            print(local_max)
-            print("")
 
     # відловлюємо значення екстр, які майже збігаються
-    print("Sorting...\n")
+    # print("Sorting...\n")
     local_min.sort()
     for i in range(local_min.size - 1, -1, -1):
-        if (local_min[i] < 0.e+0):
+        if local_min[i] < 0.e+0:
             local_min = np.delete(local_min, i)
-        if (local_min[i] > 1000):
+
+        if local_min[i] > 1000:
             local_min = np.delete(local_min, i)
+
     for i in range(local_min.size - 1, -1, -1):
-        if (math.fabs(local_min[i] - local_min[i - 1]) < 0.1):
+        if math.fabs(local_min[i] - local_min[i - 1]) < 0.1:
             local_min = np.delete(local_min, i)
 
     local_max.sort()
     for i in range(local_max.size - 1, -1, -1):
-        if (local_max[i] < 0.e+0):
+        if local_max[i] < 0.e+0:
             local_max = np.delete(local_max, i)
-        if (local_max[i] > 1000):
+
+        if local_max[i] > 1000:
             local_max = np.delete(local_max, i)
+
     for i in range(local_max.size - 1, -1, -1):
-        if (math.fabs(local_max[i] - local_max[i - 1]) < 0.1):
+        if math.fabs(local_max[i] - local_max[i - 1]) < 0.1:
             local_max = np.delete(local_max, i)
 
     set_filled = np.zeros(local_min.size, dtype=bool)  # показник заповненості ділянки
-
-    print("min")
-    print(local_min)
-    print("")
-    print("max")
-    print(local_max)
-    print("")
-    time.sleep(3)
-
+    time.sleep(1)
     delta_h = 0.01 * (max(local_max) - min(local_min))
 
     h = splines(local_min)
     x_lr = np.array(np.repeat(local_min, 2))
     V = np.zeros(local_min.size)
 
-    # початкова функція лінії води
-    print(V.size)
     for i in range(V.size):
         V[i] = set_intense * 0.005 * (local_max[i + 1] - local_max[i])
-    print("V")
-    print(V)
 
     fig, ax = plt.subplots()
     water_line, = ax.plot(x_lr, water_startlevel(x_lr), 'b')  # рівень води
@@ -167,127 +103,105 @@ def modeling(set_intense):
         return water_line,
 
     def animate(i):
-        water_line.set_data(water_level(i))  # update the data.
+        water_line.set_data(water_level(i, k))  # update the data.
         return water_line,
 
-    '''while True:
-        water_level(dx)'''
-
-    ani = animation.FuncAnimation(
-        fig, animate, frames=10, init_func=init, interval=200, blit=True, save_count=50)
-
-    # plt.show()
-    # fig = plt.figure() #"фігура, що буде відображ.
-
+    ani = animation.FuncAnimation(fig, animate, frames=10, init_func=init, interval=200, blit=True, save_count=50)
     plt.title('Затоплення')
     plt.ylabel('Висоти')
     plt.xlabel('Крок')
-
-    # plt.grid(True)
-
-    # save('pic_1_5_1'ax, fmt='pdf')
-    # save('pic_1_5_1', fmt='png')
-
     plt.show()
 
-    # water_lines = plt.plot([],[],'bo')'''
 
 def water_startlevel(x_lr):
     y = np.zeros(x_lr.size)
     for i in range(x_lr.size):
         y[i] = splines(x_lr[i])
-
     return y
 
-def water_level(step):
+
+def water_level(step, k_filter):
+    print(k_filter)
     global delta_h, eps, eta, set_filled, local_min, local_max, x_lr, h, V
     count = 0
     over_max_l = False
     over_max_r = False
     set_end = True
-    while (set_end):  # обраховуємо висоту
+    while set_end:  # обраховуємо висоту
         # замінити for на while
         i = 0
-        print('set_filled[i]')
-        print(set_filled)
-        while (i < local_min.size):
-
-            if (set_filled[i]):  # область вже заповнена
+        while i < local_min.size:
+            if set_filled[i]:  # область вже заповнена
                 i = i + 1
-
             else:
                 # V = 10 * (local_max[i + 1] - local_max[i])
                 delta_V = 0
                 delta_h = 0.001  # 0.1*(max(local_max)-min(local_min))
                 delta_xl = x_lr[i * 2]  # ліва точка
-                print("delta_xl")
-                print(delta_xl)
                 delta_xr = x_lr[(i * 2) + 1]  # права точка
-                print("delta_xr")
-                print(delta_xr)
                 old_h = h[i]
 
                 # площа контакту води та грунту
-                #впливає на об'єм затоплення (Об.зат = Об.опадів-Об.фільтр-Об.випар., Об.фільтр~пл конт.
+                # впливає на об'єм затоплення (Об.зат = Об.опадів-Об.фільтр-Об.випар., Об.фільтр~пл конт.
                 x_count = 0
                 for temp in range(dx.size):
-                    if (dx[temp] > delta_xl):
+                    if dx[temp] > delta_xl:
                         x_count = temp
                         break
                 # від лівого краю до дх
                 l_contact = math.sqrt(
                     math.pow(dx[x_count] - delta_xl, 2) + math.pow(splines(dx[x_count]) - splines(delta_xl), 2))
                 x_step = x_count
-                while (dx[x_step] < delta_xr):
+                while dx[x_step] < delta_xr:
+                    l_contact = (l_contact + math.sqrt(math.pow(dx[x_step] - dx[x_step - 1], 2) + math.pow(
+                        splines(dx[x_step] - splines(dx[x_step - 1])), 2)))
                     x_step = x_step + 1
-                    l_contact = (l_contact + math.sqrt(math.pow(dx[x_step] - dx[x_step - 1],2) + math.pow(splines(dx[x_step] - splines(dx[x_step - 1])),2)))
 
                 # задача фільтр
                 # H - напори
                 x_step = x_count
                 v_sum_filter = 0
-                if (math.fabs(splines(delta_xl) - splines(local_min[i])) > 0): #якщо є заповнення
-                    while (dx[x_step] < delta_xr):
-                        x_step = x_step + 1
-                        H = Filtration1.RS(math.fabs(splines(dx[x_step]) - y_under_surface),math.fabs((splines(delta_xl)-splines(local_min[i]))))
-                        v_filter = k_filter * math.fabs((H[0]-H[-1])/(splines(dx[x_step]) - y_under_surface))
+                if math.fabs(splines(delta_xl) - splines(local_min[i])) > 0:  # якщо є заповнення
+                    while dx[x_step] < delta_xr:
+                        H = Filtration1.RS(math.fabs(splines(dx[x_step]) - y_under_surface),
+                                           math.fabs((splines(delta_xl) - splines(local_min[i]))))
+                        v_filter = k_filter * math.fabs((H[0] - H[-1]) / (splines(dx[x_step]) - y_under_surface))
                         v_sum_filter = v_sum_filter + v_filter
                         x_step = x_step + 1
+                # TODO чисельний вимір висоти затоплення на графіку
+                # TODO вивести графіки для кожної ділянки зі зміною відфільтрр об'єму (по часу), у звіті - відсотки
+                # знаходиомо об'єм фільтрований
+                V_filter = (l_contact * v_sum_filter) * 0.001
 
-                #знаходиомо об'єм фільтрований
-                V_filter = (l_contact * v_sum_filter)*0.001
-
-
-                while (math.fabs(V[i] - delta_V) > eps):
+                while math.fabs(V[i] - delta_V) > eps:
 
                     h[i] = h[i] + delta_h
 
-                    while (math.fabs(splines(delta_xl) - h[i]) > eps):  # ліва точка
+                    while math.fabs(splines(delta_xl) - h[i]) > eps:  # ліва точка
                         delta_xl = delta_xl - eta
 
-                        if (delta_xl < local_max[i]):  # якщо перелив
+                        if delta_xl < local_max[i]:  # якщо перелив
                             over_max_l = True
                             break
-                        if (splines(delta_xl) > h[i]):
+
+                        if splines(delta_xl) > h[i]:
                             delta_xl = delta_xl + eta
                             eta = eta * 0.5
 
-                    while (math.fabs(splines(delta_xr) - h[i]) > eps):  # права точка
+                    while math.fabs(splines(delta_xr) - h[i]) > eps:  # права точка
                         delta_xr = delta_xr + eta
 
-                        if (delta_xr > local_max[i + 1]):  # якщо перелив
+                        if delta_xr > local_max[i + 1]:  # якщо перелив
                             over_max_r = True
                             break
-                        if (splines(delta_xr) > h[i]):
+
+                        if splines(delta_xr) > h[i]:
                             delta_xl = delta_xl - eta
                             eta = eta * 0.5
 
-                    delta_V = 0.01 * ((h[i] - old_h) * (x_lr[(i * 2) + 1] - x_lr[i * 2] + delta_xr - delta_xl) - V_filter)
+                    delta_V = 0.01 * (
+                                (h[i] - old_h) * (x_lr[(i * 2) + 1] - x_lr[i * 2] + delta_xr - delta_xl) - V_filter)
                     count = count + 1
-                    print('delta_V')
-                    print(delta_V)
-                    print('V_filter')
-                    print(V_filter)
 
                     if delta_V > V[i]:
                         h[i] = h[i] - 2 * delta_h
@@ -302,105 +216,87 @@ def water_level(step):
                         set_filled[i] = True
                         over_max_l = False
 
-                        if (i == 0):  # якщо перелив за ліву точку, яка є краєм
+                        # TODO: зупинка в точці, перевірити переливи
+                        if i == 0:  # якщо перелив за ліву точку, яка є краєм
                             continue
 
-                        elif (not set_filled[i - 1]):  # лівий край нижчий за наступну т лок макс
+                        elif not set_filled[i - 1]:  # лівий край нижчий за наступну т лок макс
                             V[i - 1] = V[i - 1] + V[i]
                             V[i] = 0
 
-                        elif (set_filled[i - 1]): # те саме, але  i - 1 заповнена
+                        elif set_filled[i - 1]:  # те саме, але  i - 1 заповнена
                             local_max = np.delete(local_max, i)
                             local_min = np.delete(local_min, i - 1)
-                            print("St x_lr!")
-                            print(x_lr)
-                            print("Deleting:")
-                            x_lr = np.delete(x_lr, 2 * i)
                             x_lr = np.delete(x_lr, 2 * i - 1)
-                            print("Delete x_lr!")
-                            print(x_lr)
+                            x_lr = np.delete(x_lr, 2 * i - 1)
                             set_filled = np.delete(set_filled, i - 1)
                             set_filled[i - 1] = False
                             i = i - 1
-                            print("")
-                            print("local_min")
-                            print(local_min)
-                            print("local_max")
-                            print(local_max)
-                            print("set_filled")
-                            print(set_filled)
-                            time.sleep(5)
-
+                            # time.sleep(5)
                         break
 
                     if over_max_r:  # якщо перелив справа
                         set_filled[i] = True
                         over_max_r = False
-                        print("i")
-                        print(i)
-                        print("local_max.size - 2")
-                        print(local_max.size - 2)
-                        if (i == (local_max.size - 2)):  # якщо перелив за праву точку, яка є краєм
-                            print("i")
-                            print(i)
+
+                        if i == (set_filled.size - 1):  # якщо перелив за праву точку, яка є краєм
                             break
 
-                        elif (not set_filled[i + 1]):  # справа не залито
-                            print("set_filled[i + 1]")
-                            print(set_filled[i + 1])
-                            print("set_filled")
-                            print(set_filled)
+                        elif not set_filled[i + 1]:  # справа не залито
                             V[i + 1] = V[i + 1] + V[i]
 
-                        elif (set_filled[i + 1]): # те саме, але  i + 1 заповнена
-                            print("i")
-                            print(i)
+                        elif set_filled[i + 1]:  # те саме, але  i + 1 заповнена
                             local_max = np.delete(local_max, i + 1)
                             local_min = np.delete(local_min, i + 1)
                             x_lr = np.delete(x_lr, 2 * i + 2)
                             x_lr = np.delete(x_lr, 2 * i + 1)
-                            print("Delete x_lr!")
-                            print(x_lr)
                             set_filled = np.delete(set_filled, i + 1)
                             set_filled[i] = False  # це було set_filled[i + 1]
-                            print("set_filled")
-                            print(set_filled)
-                            print("")
-                            print("local_min")
-                            print(local_min)
-                            print("local_max")
-                            print(local_max)
-                            print("set_filled")
-                            print(set_filled)
-                            time.sleep(5)
+                            # time.sleep(5)
                             # як варіант - взяти за дно точку максимуму між ними
-
                         break
 
                 x_lr[i * 2] = delta_xl  # оновлюємо х
                 x_lr[(i * 2) + 1] = delta_xr  # для висоти води
-                print("done! x_lr:")
-                print(x_lr)
-
-                print(splines(x_lr))
                 i = i + 1
         set_end = False
         time.sleep(1)
 
-
+    # TODO: прибрати бокові лінії
     # малюємо лінію
     y = np.zeros(x_lr.size)
-    print("y before")
-    print(y)
     for i in range(x_lr.size):
         y[i] = splines(x_lr[i])
-    print("x_lr")
-    print(x_lr)
 
-    print("y")
-    print(y)
+    print("x_lr", x_lr)
+    print("y", y)
+
+    with open("res.txt", "a") as file:
+        file.write(json.dumps({"x_lr":  list(x_lr), "y": list(y)}) + "\n")
+
     return x_lr, y
 
 
+RES_FILE = "./res.txt"
+if os.path.exists(RES_FILE):  # видаляємо неактуальні дані (попередній запуск програми)
+    os.remove(RES_FILE)
 
+N = 10
+measuration = [random() * 20 - 10 for i in range(N)]
+x = np.arange(0, N, 1)  # масив по осі Х
+splines = CubicSpline(x, measuration)  # шматки сплайнів
+dx = np.arange(0, N - 1, 0.1)  # розбиваємо х для відображ. графіку/сплайнів
 
+# знах екстремуми, поки що для сплайнів
+local_min = np.zeros(N)
+local_max = np.zeros(N)
+
+delta_h = 0.01 * (max(local_max) - min(local_min))
+eps = 0.005
+eta = 0.01
+h = splines(local_min)
+x_lr = np.array(np.repeat(local_min, 2))
+V = np.zeros(local_min.size)
+y_under_surface = min(local_min) - 10 * delta_h
+# TODO інтенсивність set_intense з інтерфейсу
+k_filter = 1    # TODO коефіцієнт фільтрації з інтерфейсу

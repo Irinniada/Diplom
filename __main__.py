@@ -168,13 +168,30 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 def main():
     app = QtWidgets.QApplication(sys.argv)  # новий екземпляр QApplication
     window = ExampleApp()  # ств об'єкт класу ExampleApp
-    window.pushButton_2.clicked.connect(lambda: start_button_clicked(window))
+
+    def start_button_clicked():
+        set_intense = float(window.lineEdit.text())
+
+        k = 0
+        if window.radioButton_2.isChecked():  # Пісок
+            k = 1
+        elif window.radioButton_3.isChecked():  # Супісок
+            k = 2
+        elif window.radioButton_4.isChecked():  # Суглинок
+            k = 3
+        elif window.radioButton.isChecked():  # Глина
+            k = 4
+        else:
+            raise Exception("unknown material")
+
+        # print(window.radioButton_2.text(), window.radioButton_2.isChecked())
+
+        modeling(set_intense, k)
+
+    window.pushButton_2.clicked.connect(start_button_clicked)
     window.show()  # показуєм вікно
     app.exec_()  # запускаєм додаток
 
-def start_button_clicked(window):
-    set_intense = float(window.lineEdit.text())
-    modeling(set_intense)
 
 if __name__ == '__main__':  # якщо запускаэм файл напряму, а не імпортуємо
     main()  # то запускаєм ф-ю main()
