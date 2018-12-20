@@ -35,6 +35,7 @@ def RS(x_max, h_gr):
     h = np.zeros(N)
     #гр умови
     h[0] = h_gr
+    h[-1] = 1
     h = run_off.TDMA(a,b,c,h)
     '''h_plot1, = ax.plot(x, h, 'b')  # рівень води
     h_temp = np.asarray(h)
