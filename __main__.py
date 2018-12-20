@@ -17,7 +17,7 @@ import matplotlib.animation as animation
 from collections import deque  # імпортує клас черги collections.deque'''
 
 import design
-from Modeling import modeling
+from Water import visualize
 
 '''
 class SecondWindow(QWidget):
@@ -166,10 +166,12 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
 
 def main():
+    V_f_all = []
     app = QtWidgets.QApplication(sys.argv)  # новий екземпляр QApplication
     window = ExampleApp()  # ств об'єкт класу ExampleApp
 
     def start_button_clicked():
+        global V_f_all
         set_intense = float(window.lineEdit.text())
 
         k = 0
@@ -186,9 +188,19 @@ def main():
 
         # print(window.radioButton_2.text(), window.radioButton_2.isChecked())
 
-        modeling(set_intense, k)
+        #V_f_all = modeling(set_intense, k)
+        visualize(set_intense, k)
+
+        # print("Done! V filter: ", V_f_all)
+        window.lineEdit.text("Done!")
+
+
+    def show_filter():
+        print("Show V filter: ", V_f_all)
+
 
     window.pushButton_2.clicked.connect(start_button_clicked)
+    window.pushButton_3.clicked.connect(show_filter)
     window.show()  # показуєм вікно
     app.exec_()  # запускаєм додаток
 

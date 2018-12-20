@@ -37,20 +37,7 @@ def RS(x_max, h_gr):
     h[0] = h_gr
     h[-1] = 1
     h = run_off.TDMA(a,b,c,h)
-    '''h_plot1, = ax.plot(x, h, 'b')  # рівень води
-    h_temp = np.asarray(h)
-    print("")
-    print("T=0")
 
-    
-    h_temp = np.around(h_temp, 3)
-    print(h_temp.reshape(-1,10))'''
-
-
-
-    #for i in range(M):
-    h[0] = h_gr
-    h = run_off.TDMA(a, b, c, h)
     '''#plt.plot(x,h,color = (0.1+i*0.05,0.2,0.3))
     #print("")
     #print("T=",i)
@@ -63,8 +50,8 @@ def RS(x_max, h_gr):
     #plt.show()
 
 #виводить з обмеженням на знаки після коми
-def toFixed(numObj, digits=0):
-    return f"{numObj:.{digits}f}"
+#def toFixed(numObj, digits=0):
+#    return f"{numObj:.{digits}f}"
 
 
 
