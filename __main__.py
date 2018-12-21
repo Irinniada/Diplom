@@ -166,27 +166,28 @@ class ExampleApp(QtWidgets.QMainWindow, design.Ui_MainWindow):
 
 
 def main():
-    V_f_all = []
+    #V_f_all = []
     app = QtWidgets.QApplication(sys.argv)  # новий екземпляр QApplication
     window = ExampleApp()  # ств об'єкт класу ExampleApp
 
     def start_button_clicked():
-        global V_f_all
+        #global V_f_all
         set_intense = float(window.lineEdit.text())
 
         k = 0
         if window.radioButton_2.isChecked():  # Пісок
             k = 1
         elif window.radioButton_3.isChecked():  # Супісок
-            k = 2
+            k = 0.1
         elif window.radioButton_4.isChecked():  # Суглинок
-            k = 3
+            k = 0.01
         elif window.radioButton.isChecked():  # Глина
-            k = 4
+            k = 0.002
         else:
             raise Exception("unknown material")
 
-        # print(window.radioButton_2.text(), window.radioButton_2.isChecked())
+        print(window.radioButton_2.text(), window.radioButton_2.isChecked())
+        print(set_intense)
 
         #V_f_all = modeling(set_intense, k)
         visualize(set_intense, k)
@@ -195,12 +196,8 @@ def main():
         window.lineEdit.text("Done!")
 
 
-    def show_filter():
-        print("Show V filter: ", V_f_all)
-
-
     window.pushButton_2.clicked.connect(start_button_clicked)
-    window.pushButton_3.clicked.connect(show_filter)
+
     window.show()  # показуєм вікно
     app.exec_()  # запускаєм додаток
 

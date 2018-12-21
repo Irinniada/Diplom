@@ -32,7 +32,7 @@ def save(name='', fmt='png'):
 
 def modeling(X,Y,i):
     # wt = WaterLevel
-    fig, (ax, av) = plt.subplots(2, sharex = True)
+    fig, (ax, av) = plt.subplots(2, sharex=True)
     ax.set_xlim(-1,10)
     water_line, = ax.plot(x_lr, water_startlevel(x_lr), 'b')  # рівень води
     meas_dots, = ax.plot(x, measuration, 'o', label='data')  # вхідні точки висот
@@ -48,7 +48,7 @@ def modeling(X,Y,i):
     # print("XYR", x_result, y_result)
 
     def init():  # only required for blitting to give a clean slate.
-        y_under_surface = -12  # splines(local_min[np.argmin(min_min)] - 10 * delta_h)
+        y_under_surface = splines(local_min[np.argmin(min_min)]) - 5  # splines(local_min[np.argmin(min_min)] - 10 * delta_h)
         water_line.set_data([], [])
         water_linefill = ax.fill_between(dx, splines(dx) - 1, y_under_surface, color='w')
 
@@ -58,7 +58,7 @@ def modeling(X,Y,i):
         print('t', i)
         #x_l, y_l = find_level(k, i)
         print("Gorodraw")
-        y_under_surface = -12  # splines(local_min[np.argmin(min_min)] - 10 * delta_h)
+        y_under_surface = splines(local_min[np.argmin(min_min)]) - 5  # splines(local_min[np.argmin(min_min)] - 10 * delta_h)
         water_linefill = ax.fill_between(dx, splines(dx), y_under_surface, color='w')
 
 
@@ -70,6 +70,7 @@ def modeling(X,Y,i):
         # water_line.set_data(x_result[i], y_result[i])  # update the data.
         # print(x_result[i], y_result[i])
         # spl_lines, = ax.plot(dx, splines(dx))  # сплайни
+        time.sleep(0.5)
         return water_line, water_linefill, meas_dots, min_dots, max_dots, spl_lines,
     t_local = i
     print(i)
@@ -109,7 +110,7 @@ def visualize(set_intense, k):
     for i in range(local_max.size):
         max_max[i] = splines(local_max[i])
 
-    y_under_surface = splines(local_min[np.argmin(min_min)] - 10 * delta_h)
+    y_under_surface = splines(local_min[np.argmin(min_min)]) - 5
 
     for i in range(N - 1, -1, -1):
         current_spl = splines(dx[i * 10:])
@@ -147,7 +148,7 @@ def visualize(set_intense, k):
         if local_min[i] < 0.e+0:
             local_min = np.delete(local_min, i)
 
-        if local_min[i] > 20:
+        if local_min[i] > 10:
             local_min = np.delete(local_min, i)
 
     for i in range(local_min.size - 1, -1, -1):
@@ -159,12 +160,17 @@ def visualize(set_intense, k):
         if local_max[i] < 0.e+0:
             local_max = np.delete(local_max, i)
 
-        if local_max[i] > 20:
+        if local_max[i] > 10:
             local_max = np.delete(local_max, i)
 
     for i in range(local_max.size - 1, -1, -1):
         if math.fabs(local_max[i] - local_max[i - 1]) < 0.1:
             local_max = np.delete(local_max, i)
+
+    print(local_max)
+    print(local_max.size)
+    print(local_min)
+    print(local_min.size)
 
     set_filled = np.zeros(local_min.size, dtype=bool)  # показник заповненості ділянки
     #time.sleep(1)
@@ -174,8 +180,16 @@ def visualize(set_intense, k):
     x_lr = np.array(np.repeat(local_min, 2))
     V = np.zeros(local_min.size)
 
-    for i in range(V.size):
-        V[i] = set_intense * 0.005 * (local_max[i + 1] - local_max[i])
+
+    print(set_intense)
+    print(V)
+    print(V.size)
+    for j in range(local_min.size):
+        print(local_max[j+1]-local_max[j])
+        print("i=",j)
+        V[j] = set_intense * 0.01 * (local_max[j + 1] - local_max[j])
+        print("V",V)
+
     x_R, y_R, t = water_level(k)
     print("Got level!")
     modeling(x_R,y_R,t)
@@ -204,13 +218,13 @@ def water_level(k_filter):
     for i in range(local_max.size):
         max_max[i] = splines(local_max[i])
 
-    y_under_surface = splines(local_min[np.argmin(min_min)] - 20 * delta_h)
+    y_under_surface = splines(local_min[np.argmin(min_min)]) - 5
 
     over_max_l = False
     over_max_r = False
     i = 0
 
-    l_contact = 0
+    #l_contact = 0
     set_end = True
 
     while set_end:
@@ -225,7 +239,7 @@ def water_level(k_filter):
             old_h = h[i]
             # площа контакту води та грунту
             # впливає на об'єм затоплення (Об.зат = Об.опадів-Об.фільтр-Об.випар., Об.фільтр~пл конт.
-            x_count = 0
+            '''x_count = 0
             for temp in range(dx.size):
                 if dx[temp] > delta_xl:
                     x_count = temp
@@ -241,11 +255,11 @@ def water_level(k_filter):
                     break
                 l_contact = (l_contact + math.sqrt(math.pow(dx[x_step] - dx[x_step - 1], 2) + math.pow(
                     splines(dx[x_step] - splines(dx[x_step - 1])), 2)))
-            # l_contact= l_contact * 0.01
+            # l_contact= l_contact * 0.01'''
 
             # задача фільтр
             # H - напори
-            x_step = x_count
+            #x_step = x_count
             v_sum_filter = 0
             if math.fabs(splines(delta_xl) - splines(local_min[i])) > 0:  # якщо є заповнення
                 #H = Filtration1.RS(math.fabs(splines(local_min[i]) - y_under_surface),
@@ -259,7 +273,7 @@ def water_level(k_filter):
             # TODO чисельний вимір висоти затоплення на графіку
             # TODO вивести графіки для кожної ділянки зі зміною відфільтрр об'єму (по часу), у звіті - відсотки
             # знаходиомо об'єм фільтрований
-            V_filter = (l_contact * v_sum_filter) * 0.001
+            V_filter = (v_sum_filter) * 0.001
 
             if set_filled[i]:  # область вже заповнена
                 i = i + 1
@@ -409,7 +423,7 @@ def water_level(k_filter):
             print("h_sub ", h_sub)'''
 
         for i in range(local_min.size):
-            l_contact = 0
+            #l_contact = 0
 
             #H0 = y[i] - splines(local_min[i]) #Filtration1.RS(math.fabs(splines(local_min[i]) - y_under_surface),
                 #               math.fabs((splines(delta_xl) - splines(local_min[i]))))
@@ -420,7 +434,7 @@ def water_level(k_filter):
             print('v_filt',v_filter)
             if (v_filter < 0):
                 v_filter = 0
-            x_count = 0
+            '''x_count = 0
             for temp in range(dx.size):
                 if dx[temp] > x_lr[2*i]:
                     x_count = temp
@@ -435,9 +449,9 @@ def water_level(k_filter):
                 if x_step >= dx.size:
                     break
                 l_contact = (l_contact + math.sqrt(math.pow(dx[x_step] - dx[x_step - 1], 2) + math.pow(
-                    splines(dx[x_step] - splines(dx[x_step - 1])), 2)))
+                    splines(dx[x_step] - splines(dx[x_step - 1])), 2)))'''
             #print('l_contact', l_contact)
-            V_f_all[t].append(v_filter*l_contact)
+            V_f_all[t].append(v_filter)
             #print('V_f_all_i', V_f_all)
         #print('V_f_all',V_f_all)
 
@@ -456,11 +470,14 @@ if os.path.exists(RES_FILE):  # видаляємо неактуальні дан
     os.remove(RES_FILE)
 
 N = 10
-measuration = [random() * 20 - 10 for i in range(N)]
-# measuration = [0, 2, 4, 2, 0, 1, 3, 5, 3, 0.1]
+#measuration = [random() * 20 - 10 for i in range(N)]
+
+measuration = np.array([ 3, 2.2, 4.1, 0.1, -3, 1.1, 3.1, 5.5, 6, 5])
+print(measuration)
 
 x = np.arange(0, N, 1)  # масив по осі Х
 splines = CubicSpline(x, measuration)  # шматки сплайнів
+print(splines(x))
 dx = np.arange(0, N - 1, 0.1)  # розбиваємо х для відображ. графіку/сплайнів
 
 # знах екстремуми, поки що для сплайнів
@@ -476,7 +493,7 @@ h = splines(local_min)
 x_lr = np.array(np.repeat(local_min, 2))
 V = np.zeros(local_min.size)
 
-y_under_surface = local_min[np.argmin(min_min)] - 10 * delta_h
+y_under_surface = splines(local_min[np.argmin(min_min)]) - 5
 # TODO інтенсивність set_intense з інтерфейсу
 k_filter = 1    # TODO коефіцієнт фільтрації з інтерфейсу
 V_f_all = []
